@@ -55,10 +55,29 @@ prototipo-control-gastos/
 └── README.md
 ```
 
+## Seguridad
+
+| Riesgo | Medida en el prototipo |
+|---|---|
+| Inyección SQL | No aplica: no hay base de datos SQL ni servidor. Los datos se guardan como JSON en el navegador y no se construyen consultas con texto del usuario. |
+| XSS (inyección de scripts) | Todo texto del usuario se escapa antes de mostrarse; no se usa `eval` ni se cargan scripts de terceros. Política **CSP** estricta (`default-src 'none'; script-src 'self'`) que bloquea scripts inline y conexiones de red. |
+| Datos manipulados | Al cargar los datos se validan y sanean (ids, fechas, montos, colores); lo inválido se descarta. |
+| Contraseñas | Se guardan con **PBKDF2-SHA-256** (210 000 iteraciones) y sal aleatoria; las cuentas antiguas se migran al iniciar sesión. Nunca en texto plano. |
+| Fuerza bruta | 5 intentos fallidos bloquean el inicio de sesión durante 60 s. |
+| Aislamiento entre usuarios | Cada usuario tiene sus propios datos y solo ve los suyos. |
+| Terceros y privacidad | Sin analítica, sin cookies, sin recursos externos; `referrer` desactivado. |
+| Transporte | La versión en línea se sirve por HTTPS (GitHub Pages). |
+
+Las pruebas automatizadas de seguridad cubren inyección en el acceso, XSS en nombre, notas y categorías,
+CSP, hash de contraseñas, bloqueo por intentos, migración de cuentas y datos manipulados.
+
 ## Limitaciones del prototipo
 
 - Los datos se guardan en el **navegador** (`localStorage`); no hay servidor ni base de datos.
-  Borrar los datos del sitio borra las cuentas y movimientos.
-- Las contraseñas se guardan con hash SHA-256 y sal, pero al no haber servidor es una
-  protección de demostración, no un sistema de autenticación de producción.
+  Borrar los datos del sitio borra las cuentas y movimientos, y quien tenga acceso al perfil del
+  navegador puede leer los datos (no están cifrados en reposo).
+- Al no haber servidor, la autenticación es **de demostración**: se ejecuta en el propio navegador y
+  no protege contra alguien con control del equipo. Una versión de producción debe validar la
+  sesión y los permisos en el servidor, usar una base de datos con consultas parametrizadas y
+  agregar cabeceras HTTP de seguridad.
 - No hay conexión con bancos, exportación de datos ni aplicación móvil nativa (fuera de alcance).
