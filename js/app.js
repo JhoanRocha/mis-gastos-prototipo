@@ -31,6 +31,30 @@
     return new Intl.DateTimeFormat('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(+p[0], +p[1] - 1, +p[2]));
   };
 
+  var reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var ICONS = [['aliment', '🍽️'], ['merc', '🛒'], ['transp', '🚌'], ['viviend', '🏠'], ['arrien', '🏠'], ['servic', '💡'], ['salud', '💊'],
+    ['ocio', '🎬'], ['educ', '🎓'], ['mascot', '🐾'], ['otro', '✨'], ['rop', '👕'], ['viaj', '✈️'], ['ahorr', '🐖'], ['regalo', '🎁'], ['cafe', '☕']];
+  function catIcon(name) {
+    var n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (var i = 0; i < ICONS.length; i++) if (n.indexOf(ICONS[i][0]) !== -1) return ICONS[i][1];
+    return esc(String(name || '?').charAt(0).toUpperCase());
+  }
+  /* Cuenta de 0 al valor final; el texto final siempre queda exacto. */
+  function runCountUps(root) {
+    if (reduced) return;
+    $$('[data-count]', root).forEach(function (el) {
+      var to = Number(el.dataset.count) || 0, t0 = null, dur = 950;
+      function step(ts) {
+        if (!t0) t0 = ts;
+        var k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = money(to * e);
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+      setTimeout(function () { el.textContent = money(to); }, dur + 120);
+    });
+  }
+
   /* ================= Almacenamiento ================= */
   var KEY = { users: 'gx_users', session: 'gx_session', data: function (id) { return 'gx_data_' + id; } };
   function read(k, fallback) {
@@ -42,8 +66,8 @@
   }
 
   var DEFAULT_CATS = [
-    ['Alimentación', '#e76f51'], ['Transporte', '#2a9d8f'], ['Vivienda', '#3d5a80'], ['Servicios', '#e9c46a'],
-    ['Salud', '#f4a261'], ['Ocio', '#8e6bbf'], ['Educación', '#4d8fd1'], ['Otros', '#8a8f98']
+    ['Alimentación', '#ff7a59'], ['Transporte', '#12b886'], ['Vivienda', '#5b6cff'], ['Servicios', '#f5b301'],
+    ['Salud', '#ff6b9a'], ['Ocio', '#a95cff'], ['Educación', '#2ab7ff'], ['Otros', '#8f98ad']
   ];
   function newData() {
     return {
@@ -215,7 +239,9 @@
     el.className = 'toast ' + (kind || '');
     el.textContent = msg;
     $('#toasts').appendChild(el);
-    setTimeout(function () { el.remove(); }, kind === 'warn' || kind === 'error' ? 6000 : 3200);
+    var life = kind === 'warn' || kind === 'error' ? 6000 : 3200;
+    setTimeout(function () { el.classList.add('out'); }, life - 350);
+    setTimeout(function () { el.remove(); }, life);
   }
   var modal = $('#modal');
   function openModal(html, onSubmit) {
@@ -325,52 +351,78 @@
 
   /* ================= Vistas ================= */
   function donut(byCat, total) {
-    var R = 70, C = 2 * Math.PI * R, offset = 0, parts = '';
+    var R = 70, C = 2 * Math.PI * R, offset = 0, parts = '', k = 0;
     Object.keys(byCat).sort(function (a, b) { return byCat[b] - byCat[a]; }).forEach(function (id) {
-      var c = cat(id) || { color: '#8a8f98' }, len = byCat[id] / total * C;
-      parts += '<circle r="' + R + '" cx="95" cy="95" fill="none" stroke="' + c.color + '" stroke-width="26" stroke-dasharray="' + len + ' ' + (C - len) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 95 95)"/>';
-      offset += len;
+      var c = cat(id) || { color: '#8f98ad' }, len = byCat[id] / total * C;
+      parts += '<circle class="seg" r="' + R + '" cx="95" cy="95" fill="none" stroke="' + esc(c.color) + '" stroke-width="24" stroke-dasharray="' + len + ' ' + (C - len) +
+        '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 95 95)" style="--circ:' + C + 'px;animation-delay:' + (k * 70) + 'ms"/>';
+      offset += len; k++;
     });
     return '<svg class="donut" viewBox="0 0 190 190" role="img" aria-label="Gastos por categoría">' +
-      '<circle r="' + R + '" cx="95" cy="95" fill="none" stroke="var(--line)" stroke-width="26"/>' + parts +
-      '<text x="95" y="90" text-anchor="middle" font-size="11" opacity=".7">Gastos</text>' +
-      '<text x="95" y="110" text-anchor="middle" font-size="15" font-weight="700">' + esc(money(total)) + '</text></svg>';
+      '<circle r="' + R + '" cx="95" cy="95" fill="none" stroke="var(--line)" stroke-width="24" opacity=".6"/>' + parts +
+      '<text x="95" y="88" text-anchor="middle" font-size="11" opacity=".65">Gastos</text>' +
+      '<text x="95" y="110" text-anchor="middle" font-size="16" font-weight="800">' + esc(money(total)) + '</text></svg>';
+  }
+
+  function emptyState() {
+    return '<div class="card empty"><svg viewBox="0 0 150 120" aria-hidden="true"><defs><linearGradient id="eg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe66d"/><stop offset="1" stop-color="#ffb000"/></linearGradient></defs>' +
+      '<ellipse cx="75" cy="106" rx="48" ry="8" fill="currentColor" opacity=".08"/><circle cx="75" cy="58" r="40" fill="url(#eg)"/><circle cx="75" cy="58" r="30" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="3"/>' +
+      '<text x="75" y="72" text-anchor="middle" font-size="40" font-weight="800" fill="#a56a00" font-family="system-ui">$</text><path d="M118 20l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#a45cff"/><path d="M26 34l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ff6ba6"/></svg>' +
+      '<h2>Aún no tienes movimientos</h2><p>Registra tu primer gasto con el botón <strong>+</strong>, o carga datos de ejemplo para conocer la aplicación.</p>' +
+      '<button class="btn primary" data-action="sample">Cargar datos de ejemplo</button></div>';
+  }
+
+  function sparkBars(m) {
+    var p = m.split('-'), days = new Date(+p[0], +p[1], 0).getDate(), sums = [], max = 0, hi = 0, i;
+    for (i = 0; i < days; i++) sums.push(0);
+    inMonth(m).forEach(function (x) { if (x.type === 'gasto') sums[+x.date.slice(8, 10) - 1] += x.amount; });
+    sums.forEach(function (v, k) { if (v > max) { max = v; hi = k; } });
+    return sums.map(function (v, k) {
+      var h = max ? Math.max(6, Math.round(v / max * 100)) : 6;
+      return '<i class="' + (k === hi && max ? 'hi' : '') + '" style="--h:' + h + '%;--i:' + k + '" title="Día ' + (k + 1) + ': ' + esc(money(v)) + '"></i>';
+    }).join('');
   }
 
   function viewPanel() {
     var t = totals(S.month), p = totals(shiftMonth(S.month, -1));
-    if (!S.data.movements.length) {
-      return '<div class="card empty"><h2>Aún no tienes movimientos</h2><p>Registra tu primer gasto con el botón <strong>+</strong>, o carga datos de ejemplo para conocer la aplicación.</p>' +
-        '<button class="btn primary" data-action="sample">Cargar datos de ejemplo</button></div>';
-    }
+    if (!S.data.movements.length) return emptyState();
+    var first = String(S.user.name || '').split(' ')[0];
+    var spentPct = t.income > 0 ? Math.min(999, Math.round(t.expense / t.income * 100)) : (t.expense > 0 ? 100 : 0);
     var delta = '';
     if (p.expense > 0) {
       var d = (t.expense - p.expense) / p.expense * 100;
       delta = '<span class="' + (d > 0 ? 'neg' : 'pos') + '">' + (d > 0 ? '▲' : '▼') + ' ' + Math.abs(Math.round(d)) + ' %</span> frente a ' + esc(monthLabel(shiftMonth(S.month, -1)));
     } else delta = 'Sin datos del mes anterior';
-    var html = '<div class="grid cards">' +
-      '<div class="card stat"><div class="label">Ingresos</div><div class="value pos">' + money(t.income) + '</div></div>' +
-      '<div class="card stat"><div class="label">Gastos</div><div class="value neg">' + money(t.expense) + '</div><div class="delta">' + delta + '</div></div>' +
-      '<div class="card stat"><div class="label">Saldo del mes</div><div class="value ' + (t.balance < 0 ? 'neg' : '') + '">' + money(t.balance) + '</div></div></div>';
+    var days = new Date(+S.month.slice(0, 4), +S.month.slice(5), 0).getDate();
 
-    // alertas de presupuesto
+    var html = '<section class="hero" aria-label="Saldo del mes"><span class="hero-blob b1"></span><span class="hero-blob b2"></span>' +
+      '<div class="hero-top"><div><p class="hero-hello">Hola, ' + esc(first) + ' 👋</p><p class="hero-label">Saldo de ' + esc(monthLabel(S.month)) + '</p></div>' +
+      '<span class="chip">' + spentPct + ' % del ingreso gastado</span></div>' +
+      '<div class="hero-value ' + (t.balance < 0 ? 'neg-light' : '') + '" data-count="' + t.balance + '">' + money(t.balance) + '</div>' +
+      '<div class="meter" role="img" aria-label="' + spentPct + ' % del ingreso gastado"><span style="--w:' + Math.min(100, spentPct) + '%"></span></div>' +
+      '<div class="spark" aria-hidden="true">' + sparkBars(S.month) + '</div><div class="spark-cap"><span>1</span><span>Gasto diario</span><span>' + days + '</span></div></section>';
+
+    html += '<div class="grid cards">' +
+      '<div class="card stat"><div class="top"><span class="label">Ingresos</span><span class="badge"><svg aria-hidden="true"><use href="#i-down"/></svg></span></div><div class="value pos" data-count="' + t.income + '">' + money(t.income) + '</div></div>' +
+      '<div class="card stat out"><div class="top"><span class="label">Gastos</span><span class="badge"><svg aria-hidden="true"><use href="#i-up"/></svg></span></div><div class="value neg" data-count="' + t.expense + '">' + money(t.expense) + '</div><div class="delta">' + delta + '</div></div></div>';
+
     var alerts = '';
     activeAndUsed(t).forEach(function (c) {
       var limit = budgetOf(S.month, c.id), spent = t.byCat[c.id] || 0, st = status(spent, limit);
-      if (st === 'danger') alerts += '<div class="alert danger">⚠ Superaste el presupuesto de <strong>' + esc(c.name) + '</strong>: ' + money(spent) + ' de ' + money(limit) + '.</div>';
-      else if (st === 'warn') alerts += '<div class="alert warn">Llevas el ' + Math.round(spent / limit * 100) + ' % del presupuesto de <strong>' + esc(c.name) + '</strong> (' + money(spent) + ' de ' + money(limit) + ').</div>';
+      if (st === 'danger') alerts += '<div class="alert danger"><span>Superaste el presupuesto de <strong>' + esc(c.name) + '</strong>: ' + money(spent) + ' de ' + money(limit) + '.</span></div>';
+      else if (st === 'warn') alerts += '<div class="alert warn"><span>Llevas el ' + Math.round(spent / limit * 100) + ' % del presupuesto de <strong>' + esc(c.name) + '</strong> (' + money(spent) + ' de ' + money(limit) + ').</span></div>';
     });
-    if (alerts) html += '<div class="section-head"><h2>Alertas</h2></div>' + alerts;
+    if (alerts) html += '<div><div class="section-head"><h2>Alertas</h2></div>' + alerts + '</div>';
 
-    html += '<div class="grid two" style="margin-top:1rem"><div class="card"><h2>Gastos por categoría</h2>';
+    html += '<div class="grid two"><div class="card lift"><h2>Gastos por categoría</h2>';
     if (t.expense > 0) {
       html += '<div class="donut-wrap">' + donut(t.byCat, t.expense) + '<ul class="legend">' +
         Object.keys(t.byCat).sort(function (a, b) { return t.byCat[b] - t.byCat[a]; }).map(function (id) {
-          var c = cat(id) || { name: 'Sin categoría', color: '#8a8f98' };
+          var c = cat(id) || { name: 'Sin categoría', color: '#8f98ad' };
           return '<li><span class="dot" style="background:' + esc(c.color) + '"></span>' + esc(c.name) + '<span class="amt">' + money(t.byCat[id]) + ' · ' + Math.round(t.byCat[id] / t.expense * 100) + ' %</span></li>';
         }).join('') + '</ul></div>';
     } else html += '<p class="muted">No hay gastos en este mes.</p>';
-    html += '</div><div class="card"><div class="section-head" style="margin-top:0"><h2>Últimos movimientos</h2><button class="btn ghost small" data-view="movimientos">Ver todos</button></div>';
+    html += '</div><div class="card lift"><div class="section-head" style="margin-top:0"><h2>Últimos movimientos</h2><button class="btn ghost small" data-view="movimientos">Ver todos</button></div>';
     var last = inMonth(S.month).sort(sortDesc).slice(0, 5);
     html += last.length ? '<ul class="list">' + last.map(function (m) { return rowMovement(m, false); }).join('') + '</ul>' : '<p class="muted">Sin movimientos este mes.</p>';
     return html + '</div></div>';
@@ -381,12 +433,13 @@
   var sortDesc = function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : (a.id < b.id ? 1 : -1); };
 
   function rowMovement(m, actions) {
-    var c = m.type === 'gasto' ? (cat(m.categoryId) || { name: 'Sin categoría', color: '#8a8f98' }) : { name: 'Ingreso', color: '#1a7f4b' };
-    return '<li class="row"><span class="dot" style="background:' + esc(c.color) + '" aria-hidden="true">' + esc(c.name.charAt(0).toUpperCase()) + '</span>' +
+    var c = m.type === 'gasto' ? (cat(m.categoryId) || { name: 'Sin categoría', color: '#8f98ad' }) : { name: 'Ingreso', color: '#0f9d6b' };
+    var icon = m.type === 'gasto' ? catIcon(c.name) : '💰';
+    return '<li class="row"><span class="dot" style="background:' + esc(c.color) + '26" aria-hidden="true">' + icon + '</span>' +
       '<div class="main"><div class="title">' + esc(m.note || c.name) + '</div><div class="meta">' + esc(c.name) + ' · ' + esc(dayLabel(m.date)) + '</div></div>' +
       '<div class="amount ' + (m.type === 'ingreso' ? 'pos' : '') + '">' + (m.type === 'ingreso' ? '+' : '−') + money(m.amount) + '</div>' +
-      (actions ? '<div class="actions"><button class="icon-btn" style="width:38px;height:38px;font-size:1rem" data-action="edit" data-id="' + esc(m.id) + '" aria-label="Editar">✎</button>' +
-        '<button class="icon-btn" style="width:38px;height:38px;font-size:1rem" data-action="del" data-id="' + esc(m.id) + '" aria-label="Eliminar">🗑</button></div>' : '') + '</li>';
+      (actions ? '<div class="actions"><button class="icon-btn mini" data-action="edit" data-id="' + esc(m.id) + '" aria-label="Editar">✎</button>' +
+        '<button class="icon-btn mini" data-action="del" data-id="' + esc(m.id) + '" aria-label="Eliminar">🗑</button></div>' : '') + '</li>';
   }
 
   function viewMovimientos() {
@@ -414,14 +467,14 @@
     var t = totals(S.month), cats = activeCats();
     var html = '<div class="section-head"><h2>Presupuesto de ' + esc(monthLabel(S.month)) + '</h2>' +
       '<button class="btn small" data-action="copy-budget">Copiar del mes anterior</button></div>' +
-      '<p class="muted small">Define un límite por categoría. Verás una alerta al llegar al 80 % y otra al superar el 100 %.</p><div class="card">';
+      '<p class="muted small" style="margin-top:-.3rem">Define un límite por categoría. Verás una alerta al llegar al 80 % y otra al superar el 100 %.</p><div class="card">';
     if (!cats.length) return html + '<p class="muted">No hay categorías activas.</p></div>';
     html += cats.map(function (c) {
       var limit = budgetOf(S.month, c.id), spent = t.byCat[c.id] || 0, st = status(spent, limit);
       var pct = limit ? Math.min(100, spent / limit * 100) : 0;
       var msg = !limit ? 'Sin límite definido' : st === 'danger' ? 'Superado por ' + money(spent - limit) : st === 'warn' ? 'Cerca del límite (' + Math.round(spent / limit * 100) + ' %)' : 'Disponible: ' + money(limit - spent);
-      return '<div class="budget-row"><div class="budget-head"><strong><span class="dot" style="display:inline-block;width:.7rem;height:.7rem;border-radius:50%;background:' + esc(c.color) + ';margin-right:.4rem"></span>' + esc(c.name) + '</strong>' +
-        '<div class="budget-input"><label class="small" style="display:block" for="b-' + esc(c.id) + '">Límite</label><input id="b-' + esc(c.id) + '" type="number" min="0" step="1000" inputmode="numeric" data-budget="' + esc(c.id) + '" value="' + (limit || '') + '" placeholder="0"></div></div>' +
+      return '<div class="budget-row"><div class="budget-head"><strong><span aria-hidden="true">' + catIcon(c.name) + '</span>' + esc(c.name) + ' <span class="pill ' + (limit ? (st === 'ok' ? '' : st) : 'none') + '">' + (limit ? Math.round(spent / limit * 100) + ' %' : '—') + '</span></strong>' +
+        '<div class="budget-input"><label class="small" for="b-' + esc(c.id) + '">Límite</label><input id="b-' + esc(c.id) + '" type="number" min="0" step="1000" inputmode="numeric" data-budget="' + esc(c.id) + '" value="' + (limit || '') + '" placeholder="0"></div></div>' +
         '<div class="bar ' + (st === 'warn' ? 'warn' : st === 'danger' ? 'danger' : '') + '" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(pct) + '" aria-label="Avance ' + esc(c.name) + '"><span style="width:' + pct + '%"></span></div>' +
         '<div class="meta small ' + (st === 'danger' ? 'neg' : st === 'warn' ? 'warn' : 'muted') + '">' + money(spent) + (limit ? ' de ' + money(limit) : '') + ' · ' + msg + '</div></div>';
     }).join('');
@@ -433,7 +486,7 @@
     var html = '<div class="section-head"><h2>Categorías</h2><button class="btn primary small" data-action="cat-add">+ Nueva</button></div><div class="card"><ul class="list">';
     html += S.data.categories.map(function (c) {
       var used = S.data.movements.filter(function (m) { return m.categoryId === c.id; }).length;
-      return '<li class="row"><span class="dot" style="background:' + esc(c.color) + (c.active ? '' : ';opacity:.4') + '" aria-hidden="true">' + esc(c.name.charAt(0).toUpperCase()) + '</span>' +
+      return '<li class="row"><span class="dot" style="background:' + esc(c.color) + '26' + (c.active ? '' : ';opacity:.45') + '" aria-hidden="true">' + catIcon(c.name) + '</span>' +
         '<div class="main"><div class="title"' + (c.active ? '' : ' style="opacity:.6"') + '>' + esc(c.name) + '</div><div class="meta">' + used + ' movimientos' + (c.active ? '' : ' · desactivada') + '</div></div>' +
         '<div class="actions"><button class="btn small" data-action="cat-edit" data-id="' + esc(c.id) + '">Editar</button>' +
         '<button class="btn small" data-action="cat-toggle" data-id="' + esc(c.id) + '">' + (c.active ? 'Desactivar' : 'Activar') + '</button></div></li>';
@@ -443,14 +496,17 @@
 
   var VIEWS = { panel: viewPanel, movimientos: viewMovimientos, presupuesto: viewPresupuesto, categorias: viewCategorias };
 
-  function render() {
+  function render(anim) {
     $('#month-label').textContent = monthLabel(S.month);
     $$('.nav-btn').forEach(function (b) {
       var on = b.dataset.view === S.view;
       b.classList.toggle('active', on);
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
-    $('#view').innerHTML = VIEWS[S.view]();
+    var v = $('#view');
+    v.classList.toggle('anim', !!anim && !reduced);
+    v.innerHTML = VIEWS[S.view]();
+    if (anim) runCountUps(v);
   }
 
   /* ================= Datos de ejemplo ================= */
@@ -483,7 +539,7 @@
     save();
     S.month = cur;
     toast('Datos de ejemplo cargados.', 'ok');
-    render();
+    render(true);
   }
 
   /* ================= Eventos ================= */
@@ -491,7 +547,7 @@
     var el = e.target.closest('[data-view],[data-action],[data-auth]');
     if (!el) return;
     if (el.dataset.auth) { switchAuth(el.dataset.auth); return; }
-    if (el.dataset.view) { S.view = el.dataset.view; render(); $('#view').focus({ preventScroll: true }); window.scrollTo(0, 0); return; }
+    if (el.dataset.view) { S.view = el.dataset.view; render(true); $('#view').focus({ preventScroll: true }); window.scrollTo(0, 0); return; }
     var id = el.dataset.id, a = el.dataset.action;
     if (a === 'add') movementForm();
     else if (a === 'edit') movementForm(S.data.movements.filter(function (x) { return x.id === id; })[0]);
@@ -521,8 +577,8 @@
       if (next) next.focus();
     }
   });
-  $('#month-prev').addEventListener('click', function () { S.month = shiftMonth(S.month, -1); render(); });
-  $('#month-next').addEventListener('click', function () { S.month = shiftMonth(S.month, 1); render(); });
+  $('#month-prev').addEventListener('click', function () { S.month = shiftMonth(S.month, -1); render(true); });
+  $('#month-next').addEventListener('click', function () { S.month = shiftMonth(S.month, 1); render(true); });
   $('#fab-add').addEventListener('click', function () { movementForm(); });
   $('#btn-logout').addEventListener('click', logout);
 
@@ -556,7 +612,8 @@
   function showApp() {
     $('#auth').hidden = true; $('#app').hidden = false;
     $('#user-name').textContent = S.user.name;
-    render();
+    $('#user-avatar').textContent = String(S.user.name || '?').trim().charAt(0).toUpperCase();
+    render(true);
   }
 
   /* ================= Inicio ================= */

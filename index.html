@@ -5,17 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
   <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#5b3df5">
   <title>Mis Gastos – Prototipo</title>
   <meta name="description" content="Prototipo funcional de una aplicación web para el control de gastos personales y del hogar.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='700' text-anchor='middle' fill='white' font-family='sans-serif'%3E$%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236d4dff'/%3E%3Cstop offset='.6' stop-color='%23a45cff'/%3E%3Cstop offset='1' stop-color='%23ff6ba6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='14' fill='url(%23g)'/%3E%3Ccircle cx='24' cy='25' r='13' fill='white'/%3E%3Ctext x='24' y='31.5' text-anchor='middle' font-size='19' font-weight='800' fill='%236d4dff' font-family='sans-serif'%3E$%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
+  <!-- Símbolos reutilizables: logotipo e íconos -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6d4dff"/><stop offset=".6" stop-color="#a45cff"/><stop offset="1" stop-color="#ff6ba6"/>
+      </linearGradient>
+      <symbol id="logo" viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="14" fill="url(#lg)"/>
+        <circle cx="24" cy="25" r="13" fill="#fff"/>
+        <text x="24" y="31.5" text-anchor="middle" font-size="19" font-weight="800" fill="#6d4dff" font-family="system-ui, sans-serif">$</text>
+        <path d="M37 7l1.7 3.6 3.6 1.7-3.6 1.7L37 17.6l-1.7-3.6-3.6-1.7 3.6-1.7z" fill="#ffe66d"/>
+      </symbol>
+      <symbol id="i-panel" viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 8h6V4h-6zM4 20h6v-3H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-pie" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-9z M15 2.8A9 9 0 0 1 21.2 9H15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5 12 4h8v8l-8.5 8.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="16" cy="8" r="1.3" fill="currentColor"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V6m0 0-5 5m5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v13m0 0-5-5m5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
   <!-- ===== Autenticación (módulo 1) ===== -->
   <main id="auth" class="auth" hidden>
+    <aside class="auth-hero" aria-hidden="false">
+      <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
+      <span class="coin c1">$</span><span class="coin c2">$</span><span class="coin c3">$</span>
+      <div class="brand light"><svg class="logo" aria-hidden="true"><use href="#logo"/></svg><span>Mis Gastos</span></div>
+      <h2 class="hero-title">Tu dinero,<br><span class="grad">a la vista.</span></h2>
+      <ul class="perks">
+        <li><span class="tick">✓</span> Registra un gasto en segundos</li>
+        <li><span class="tick">✓</span> Alertas antes de pasarte del presupuesto</li>
+        <li><span class="tick">✓</span> Sin bancos: tus datos se quedan contigo</li>
+      </ul>
+    </aside>
+
     <section class="auth-card" aria-labelledby="auth-title">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">$</span><span>Mis Gastos</span></div>
+      <div class="brand mobile-only"><svg class="logo" aria-hidden="true"><use href="#logo"/></svg><span>Mis Gastos</span></div>
       <h1 id="auth-title">Ingresa a tu cuenta</h1>
       <p class="muted">Controla en qué se va tu dinero, sin bancos ni complicaciones.</p>
 
@@ -56,14 +90,15 @@
   <!-- ===== Aplicación ===== -->
   <div id="app" hidden>
     <header class="topbar">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">$</span><span>Mis Gastos</span></div>
+      <div class="brand"><svg class="logo" aria-hidden="true"><use href="#logo"/></svg><span>Mis Gastos</span></div>
       <nav class="nav" id="nav" aria-label="Secciones">
-        <button data-view="panel" class="nav-btn"><span class="ico" aria-hidden="true">▦</span><span>Panel</span></button>
-        <button data-view="movimientos" class="nav-btn"><span class="ico" aria-hidden="true">☰</span><span>Movimientos</span></button>
-        <button data-view="presupuesto" class="nav-btn"><span class="ico" aria-hidden="true">◔</span><span>Presupuesto</span></button>
-        <button data-view="categorias" class="nav-btn"><span class="ico" aria-hidden="true">⚑</span><span>Categorías</span></button>
+        <button data-view="panel" class="nav-btn"><svg class="ic" aria-hidden="true"><use href="#i-panel"/></svg><span>Panel</span></button>
+        <button data-view="movimientos" class="nav-btn"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>Movimientos</span></button>
+        <button data-view="presupuesto" class="nav-btn"><svg class="ic" aria-hidden="true"><use href="#i-pie"/></svg><span>Presupuesto</span></button>
+        <button data-view="categorias" class="nav-btn"><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg><span>Categorías</span></button>
       </nav>
       <div class="user">
+        <span class="avatar" id="user-avatar" aria-hidden="true"></span>
         <span id="user-name" class="user-name"></span>
         <button class="btn ghost small" id="btn-logout">Salir</button>
       </div>
@@ -77,7 +112,7 @@
 
     <main id="view" class="view" tabindex="-1"></main>
 
-    <button class="fab" id="fab-add" aria-label="Registrar movimiento">+</button>
+    <button class="fab" id="fab-add" aria-label="Registrar movimiento"><span aria-hidden="true">+</span></button>
   </div>
 
   <dialog id="modal" aria-labelledby="modal-title"></dialog>
