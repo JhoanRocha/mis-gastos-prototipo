@@ -4,6 +4,7 @@
    suaves que respetan «reducir movimiento».
    ========================================================== */
 :root {
+  color-scheme: light dark;
   --bg: #f6f3ee;
   --bg-glow-1: rgba(109, 77, 255, .13);
   --bg-glow-2: rgba(255, 107, 166, .12);
@@ -291,14 +292,14 @@ input[type="color"] { padding: .2rem; cursor: pointer; }
 /* ---------- Modal y avisos ---------- */
 dialog {
   border: 0; border-radius: 28px; padding: 1.5rem; width: min(480px, calc(100% - 1.5rem));
-  background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg);
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow-lg); overflow-x: hidden;
 }
 dialog[open] { animation: pop .35s var(--ease); }
 dialog::backdrop { background: rgba(18, 12, 48, .5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 dialog[open]::backdrop { animation: fade .3s ease; }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; background: var(--bg); padding: .3rem; border-radius: 16px; margin-top: .6rem; }
-.seg input { position: absolute; opacity: 0; pointer-events: none; }
-.seg label { text-align: center; padding: .6rem; border-radius: 12px; cursor: pointer; font-weight: 700; color: var(--muted); transition: background-color .25s, color .25s, box-shadow .25s; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; min-height: 0; padding: 0; border: 0; }
+.seg label { position: relative; text-align: center; padding: .6rem; border-radius: 12px; cursor: pointer; font-weight: 700; color: var(--muted); transition: background-color .25s, color .25s, box-shadow .25s; }
 .seg label.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
 .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.2rem; }
 .toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 6rem; z-index: 60; display: grid; gap: .5rem; width: min(440px, calc(100% - 1.5rem)); pointer-events: none; }
