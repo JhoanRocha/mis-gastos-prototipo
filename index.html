@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis Gastos – Prototipo</title>
+  <meta name="description" content="Prototipo funcional de una aplicación web para el control de gastos personales y del hogar.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='700' text-anchor='middle' fill='white' font-family='sans-serif'%3E$%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ===== Autenticación (módulo 1) ===== -->
+  <main id="auth" class="auth" hidden>
+    <section class="auth-card" aria-labelledby="auth-title">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">$</span><span>Mis Gastos</span></div>
+      <h1 id="auth-title">Ingresa a tu cuenta</h1>
+      <p class="muted">Controla en qué se va tu dinero, sin bancos ni complicaciones.</p>
+
+      <div class="tabs" role="tablist" aria-label="Acceso">
+        <button role="tab" id="tab-login" class="tab active" data-auth="login" aria-selected="true">Iniciar sesión</button>
+        <button role="tab" id="tab-register" class="tab" data-auth="register" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <form id="form-login" class="form" novalidate>
+        <label>Correo electrónico
+          <input type="email" name="email" autocomplete="email" required placeholder="tucorreo@ejemplo.com">
+        </label>
+        <label>Contraseña
+          <input type="password" name="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <p class="error" data-error role="alert"></p>
+        <button class="btn primary block" type="submit">Entrar</button>
+      </form>
+
+      <form id="form-register" class="form" novalidate hidden>
+        <label>Nombre
+          <input type="text" name="name" autocomplete="name" required maxlength="40" placeholder="Tu nombre">
+        </label>
+        <label>Correo electrónico
+          <input type="email" name="email" autocomplete="email" required placeholder="tucorreo@ejemplo.com">
+        </label>
+        <label>Contraseña (mínimo 6 caracteres)
+          <input type="password" name="password" autocomplete="new-password" required minlength="6">
+        </label>
+        <p class="error" data-error role="alert"></p>
+        <button class="btn primary block" type="submit">Crear cuenta</button>
+      </form>
+
+      <p class="fineprint">Prototipo académico: tus datos se guardan solo en este navegador. No se conecta con bancos ni se envía información a ningún servidor.</p>
+    </section>
+  </main>
+
+  <!-- ===== Aplicación ===== -->
+  <div id="app" hidden>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">$</span><span>Mis Gastos</span></div>
+      <nav class="nav" id="nav" aria-label="Secciones">
+        <button data-view="panel" class="nav-btn"><span class="ico" aria-hidden="true">▦</span><span>Panel</span></button>
+        <button data-view="movimientos" class="nav-btn"><span class="ico" aria-hidden="true">☰</span><span>Movimientos</span></button>
+        <button data-view="presupuesto" class="nav-btn"><span class="ico" aria-hidden="true">◔</span><span>Presupuesto</span></button>
+        <button data-view="categorias" class="nav-btn"><span class="ico" aria-hidden="true">⚑</span><span>Categorías</span></button>
+      </nav>
+      <div class="user">
+        <span id="user-name" class="user-name"></span>
+        <button class="btn ghost small" id="btn-logout">Salir</button>
+      </div>
+    </header>
+
+    <div class="monthbar">
+      <button class="icon-btn" id="month-prev" aria-label="Mes anterior">‹</button>
+      <strong id="month-label" aria-live="polite"></strong>
+      <button class="icon-btn" id="month-next" aria-label="Mes siguiente">›</button>
+    </div>
+
+    <main id="view" class="view" tabindex="-1"></main>
+
+    <button class="fab" id="fab-add" aria-label="Registrar movimiento">+</button>
+  </div>
+
+  <dialog id="modal" aria-labelledby="modal-title"></dialog>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <noscript><p style="padding:2rem">Esta aplicación necesita JavaScript activado.</p></noscript>
+  <script src="js/app.js"></script>
+</body>
+</html>
